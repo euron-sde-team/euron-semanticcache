@@ -31,8 +31,9 @@ up: env ## Start the full stack on emulated AWS (Floci): Terraform, Redis, mock 
 	$(FLOCI) up -d --build
 	@echo "console http://localhost:3100   api http://localhost:8180/docs   mock-llm http://localhost:8190   floci http://localhost:4666"
 
-down: ## Stop the stack and delete its volumes
+down: ## Stop the stack and delete its volumes (and the local Terraform state, which belongs to the emulator)
 	-$(FLOCI) down -v --remove-orphans
+	@rm -f infra/terraform/envs/local-floci/terraform.tfstate infra/terraform/envs/local-floci/terraform.tfstate.backup
 
 logs: ## Tail logs (SERVICE=api|api-replica|mock-llm|console|...)
 	$(FLOCI) logs -f --tail 100 $(SERVICE)

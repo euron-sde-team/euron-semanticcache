@@ -1,9 +1,11 @@
 FROM python:3.12-slim
-ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 WORKDIR /app
 COPY packages/core ./packages/core
 COPY apps/api ./apps/api
-RUN pip install ./packages/core ./apps/api \
+# BuildKit cache + retries: rebuilds are fast and survive a flaky network.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --retries 10 --default-timeout 60 ./packages/core ./apps/api \
  && useradd --system --uid 10001 sc
 USER sc
 EXPOSE 8180

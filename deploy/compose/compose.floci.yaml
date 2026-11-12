@@ -27,7 +27,10 @@ services:
         set -e
         echo "waiting for floci..."
         until wget -q -O /dev/null http://floci:4566/; do sleep 1; done
-        terraform init -input=false -no-color >/dev/null
+        # Offline-first: install providers from the local cache when present, so `make up` works without network
+        # after the first run. Only a cold cache goes to the registry.
+        terraform init -input=false -no-color -plugin-dir=/plugin-cache >/dev/null 2>&1 \
+          || terraform init -input=false -no-color >/dev/null
         terraform apply -input=false -auto-approve -no-color \
           -var endpoint=http://floci:4566 -var "bootstrap_api_key=$$SC_BOOTSTRAP_API_KEY"
         terraform output -no-color
