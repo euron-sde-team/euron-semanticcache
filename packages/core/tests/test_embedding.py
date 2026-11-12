@@ -66,3 +66,12 @@ def test_build_embedder() -> None:
     assert build_embedder("hashing", dim=64).dim == 64
     with pytest.raises(ValueError, match="unknown embedder"):
         build_embedder("nope")
+
+
+async def test_spelled_out_numbers_embed_like_digits() -> None:
+    """Regression: 'two' and '2' were different tokens, so the guard agreed they were the same number but the
+    embedding did not."""
+    (s,) = await sims(
+        HashingEmbedder(), "List two good reasons to use a cache", ["list 2 good reasons to use a cache"]
+    )
+    assert s > 0.99

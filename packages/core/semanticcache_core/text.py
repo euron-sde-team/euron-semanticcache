@@ -160,8 +160,11 @@ def tokens(text: str) -> list[str]:
 
 
 def content_tokens(text: str) -> list[str]:
-    """Tokens that carry meaning: no stop-words (negations are kept, they flip meaning)."""
-    return [t for t in tokens(text) if t not in STOPWORDS or t in NEGATIONS]
+    """Tokens that carry meaning: no stop-words (negations are kept, they flip meaning).
+
+    Spelled-out numbers become digits, so "two seats" and "2 seats" embed identically, matching how the
+    number guard already treats them."""
+    return [_NUMBER_WORDS.get(t, t) for t in tokens(text) if t not in STOPWORDS or t in NEGATIONS]
 
 
 def numbers(text: str) -> frozenset[str]:

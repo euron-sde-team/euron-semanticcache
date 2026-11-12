@@ -15,6 +15,7 @@ def test_normalize_is_case_accent_and_whitespace_insensitive() -> None:
 
 def test_content_tokens_drop_stopwords_but_keep_negation() -> None:
     assert content_tokens("How do I reset the password?") == ["reset", "password"]
+    assert content_tokens("List two reasons, not 12") == ["list", "2", "reasons", "not", "12"]
     assert "not" in content_tokens("It is not working")
     assert "don't" in content_tokens("Why don't cats like water")
 
