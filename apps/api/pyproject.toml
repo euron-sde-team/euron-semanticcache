@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "semanticcache-api"
+version = "0.1.0"
+description = "SemanticCache REST API and OpenAI-compatible caching proxy (FastAPI)."
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = [
+  "semanticcache-core",
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "prometheus-client>=0.21",
+  "boto3>=1.35",
+  "httpx>=0.27",
+]
+
+[project.scripts]
+semanticcache-api = "semanticcache_api.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["semanticcache_api*"]

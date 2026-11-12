@@ -120,7 +120,7 @@ class SemanticCache:
         prep = prepared or await self.prepare(req, embed=cfg.semantic)
         result = await self._find(ns, cfg, prep)
         if record:
-            await self._record_lookup(ns, result)
+            await self.record_lookup(ns, result)
         return result
 
     async def _find(self, ns: str, cfg: NamespaceConfig, prep: Prepared) -> Lookup:
@@ -162,7 +162,7 @@ class SemanticCache:
             )
         return out
 
-    async def _record_lookup(self, ns: str, result: Lookup) -> None:
+    async def record_lookup(self, ns: str, result: Lookup) -> None:
         if not result.hit or result.entry is None or result.match is None:
             await self.store.incr(
                 ns,
