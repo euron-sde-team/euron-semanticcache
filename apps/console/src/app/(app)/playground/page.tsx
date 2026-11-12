@@ -61,7 +61,7 @@ export default function PlaygroundPage() {
         actions={<Button onClick={() => demo.mutate()} loading={demo.isPending} data-testid="run-demo"><Play className="size-3.5" />{demo.isPending ? `Running ${seq}/${DEMO_SEQUENCE.length}` : "Run demo sequence"}</Button>}
       />
       <div className="grid gap-5 lg:grid-cols-5">
-        <form className="card space-y-4 p-5 lg:col-span-2" onSubmit={(e) => { e.preventDefault(); send.mutate(); }} aria-label="Ask">
+        <form className="card min-w-0 space-y-4 p-5 lg:col-span-2" onSubmit={(e) => { e.preventDefault(); send.mutate(); }} aria-label="Ask">
           <div className="flex flex-wrap gap-1.5" aria-label="Example prompts">
             {PRESETS.map((p) => (
               <button type="button" key={p.label} onClick={() => setPrompt(p.prompt)} title={p.hint} data-testid={`preset-${p.label}`}
@@ -90,7 +90,7 @@ export default function PlaygroundPage() {
           </div>
         </form>
 
-        <div className="space-y-5 lg:col-span-3">
+        <div className="min-w-0 space-y-5 lg:col-span-3">
           <div className="card p-5" data-testid="result">
             {!last ? (
               <div className="py-10 text-center"><Zap className="mx-auto mb-2 size-6 text-subtle" /><p className="font-medium">Send a prompt to see the cache work</p><p className="mt-1 text-[13px] text-muted">Try “Reset password”, then its “Paraphrase”, then the “Look-alike”.</p></div>
@@ -104,7 +104,7 @@ export default function PlaygroundPage() {
                 </div>
                 {last.rejectedReason && <p className="mb-3 rounded-md border border-waiting/30 bg-waiting/10 px-3 py-2 text-[13px] text-waiting" data-testid="guard-note">A near match ({last.rejectedSimilarity?.toFixed(3)}) was rejected: <b>{last.rejectedReason}</b>. The provider answered instead.</p>}
                 {last.error ? <p role="alert" className="rounded-md border border-failed/30 bg-failed/10 px-3 py-2 text-[13px] text-failed">{last.error}</p>
-                  : <p className="whitespace-pre-wrap rounded-lg border border-line bg-bg p-3.5 text-[13px] leading-relaxed" data-testid="answer">{last.content}</p>}
+                  : <p className="whitespace-pre-wrap rounded-lg border border-line bg-bg p-3.5 text-[13px] leading-relaxed [overflow-wrap:anywhere]" data-testid="answer">{last.content}</p>}
               </>
             )}
           </div>

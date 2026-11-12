@@ -31,7 +31,7 @@ function EntryDrawer({ entry, onClose, namespace }: { entry: CacheEntry | null; 
           <div className="border-b border-line px-5 py-3"><Button size="sm" variant="danger" onClick={() => del.mutate()} loading={del.isPending}><Trash2 className="size-3.5" />Invalidate</Button></div>
           <section className="border-b border-line px-5 py-4">
             <h3 className="label mb-2.5">Cached answer</h3>
-            <p className="whitespace-pre-wrap rounded-lg border border-line bg-bg p-3 text-[13px] leading-relaxed">{answer(entry)}</p>
+            <p className="whitespace-pre-wrap rounded-lg border border-line bg-bg p-3 text-[13px] leading-relaxed [overflow-wrap:anywhere]">{answer(entry)}</p>
           </section>
           <section className="border-b border-line px-5 py-4">
             <h3 className="label mb-2.5">Details</h3>
@@ -100,7 +100,8 @@ function Entries() {
             <Input aria-label="Search prompts" placeholder="Search prompts" value={search} onChange={(e) => setSearch(e.target.value)} className="w-60 pl-8" />
           </div>
         </div>
-        {list.error ? <div className="p-4"><ErrorBanner error={list.error} onRetry={() => void list.refetch()} /></div>
+        {namespaces.error ? <div className="p-4"><ErrorBanner error={namespaces.error} onRetry={() => void namespaces.refetch()} /></div>
+          : list.error ? <div className="p-4"><ErrorBanner error={list.error} onRetry={() => void list.refetch()} /></div>
           : !active ? <EmptyState icon={<Database className="size-5" />} title="No namespaces yet" hint="Send a request through the proxy and its namespace appears here." />
           : list.isLoading ? <div className="space-y-2 p-4">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-9" />)}</div>
           : items.length === 0 ? <EmptyState icon={<Database className="size-5" />} title={q ? "No entries match" : "Nothing cached yet"} hint={q ? "Try a different search." : "Entries appear as soon as a request is answered by the provider."} />
