@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="330" viewBox="0 0 1280 330" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="Request flow: scope, exact lookup, semantic lookup, guards, then hit or miss to the provider and store">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8b95a8"/></marker></defs>
+  <rect width="1280" height="330" rx="14" fill="#0b0d12"/>
+  <g font-size="14" font-weight="600" text-anchor="middle">
+    <rect x="30" y="120" width="150" height="70" rx="12" fill="#11151d" stroke="#262b36"/><text x="105" y="150" fill="#e8ebf2">Request</text><text x="105" y="170" fill="#8b95a8" font-weight="400" font-size="12">model · messages</text>
+    <rect x="230" y="120" width="170" height="70" rx="12" fill="#11151d" stroke="#2dd4bf"/><text x="315" y="150" fill="#5eead4">1. Scope</text><text x="315" y="170" fill="#8b95a8" font-weight="400" font-size="12">model+system+history</text>
+    <rect x="450" y="120" width="150" height="70" rx="12" fill="#11151d" stroke="#262b36"/><text x="525" y="150" fill="#e8ebf2">2. Exact</text><text x="525" y="170" fill="#8b95a8" font-weight="400" font-size="12">hash lookup, O(1)</text>
+    <rect x="650" y="120" width="170" height="70" rx="12" fill="#11151d" stroke="#262b36"/><text x="735" y="150" fill="#e8ebf2">3. Semantic</text><text x="735" y="170" fill="#8b95a8" font-weight="400" font-size="12">cosine in scope</text>
+    <rect x="870" y="120" width="150" height="70" rx="12" fill="#11151d" stroke="#f5b43c"/><text x="945" y="150" fill="#f5b43c">4. Guards</text><text x="945" y="170" fill="#8b95a8" font-weight="400" font-size="12">numbers · IDs · not</text>
+    <rect x="1070" y="40" width="180" height="70" rx="35" fill="#34d39922" stroke="#34d399"/><text x="1160" y="70" fill="#34d399">HIT</text><text x="1160" y="90" fill="#8b95a8" font-weight="400" font-size="12">no provider call</text>
+    <rect x="1070" y="200" width="180" height="70" rx="12" fill="#11151d" stroke="#f5b43c"/><text x="1160" y="228" fill="#f5b43c">MISS</text><text x="1160" y="248" fill="#8b95a8" font-weight="400" font-size="12">double-check, ask provider</text>
+    <rect x="780" y="250" width="200" height="56" rx="12" fill="#11151d" stroke="#262b36"/><text x="880" y="274" fill="#e8ebf2">Store + count</text><text x="880" y="293" fill="#8b95a8" font-weight="400" font-size="12">only complete text answers</text>
+  </g>
+  <g stroke="#8b95a8" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M180 155 L230 155"/><path d="M400 155 L450 155"/><path d="M600 155 L650 155"/><path d="M820 155 L870 155"/>
+    <path d="M945 120 C 945 80 1000 75 1070 75"/><path d="M1020 170 C 1050 210 1050 235 1070 235"/>
+    <path d="M1070 255 L980 278" stroke-dasharray="5 5"/>
+    <path d="M525 120 C 525 60 900 40 1070 60" stroke-dasharray="3 5" opacity=".7"/>
+  </g>
+  <g fill="#8b95a8" font-size="12" text-anchor="middle">
+    <text x="800" y="52">an exact hit skips straight to HIT</text><text x="1008" y="62">passes</text><text x="945" y="222">rejected, or below threshold</text>
+  </g>
+</svg>

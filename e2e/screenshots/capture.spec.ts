@@ -20,16 +20,16 @@ test("capture every screen", async ({ page, request }) => {
 
   // Playground: the demo sequence, then a look-alike that the guard rejects.
   await openConsole(page, "/playground");
-  await page.getByLabel("Namespace").fill("playground");
+  await page.getByLabel("Namespace", { exact: true }).fill("playground");
   await page.getByTestId("run-demo").click();
   await expect(page.getByTestId("log-row")).toHaveCount(7, { timeout: 60_000 });
   await page.waitForTimeout(500);
   await shot(page, "02-playground");
 
-  await page.getByLabel("Prompt").fill(LONG.replace("{}", "region 4"));
+  await page.locator("[name=prompt]").fill(LONG.replace("{}", "region 4"));
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("log-row")).toHaveCount(8);
-  await page.getByLabel("Prompt").fill(LONG.replace("{}", "region 5"));
+  await page.locator("[name=prompt]").fill(LONG.replace("{}", "region 5"));
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("guard-note")).toContainText("numbers differ");
   await page.waitForTimeout(400);
@@ -37,8 +37,8 @@ test("capture every screen", async ({ page, request }) => {
 
   // Similarity lab on the same namespace.
   await openConsole(page, "/lab");
-  await page.getByLabel("Namespace").fill("playground");
-  await page.getByLabel("Prompt").fill(LONG.replace("{}", "region 6"));
+  await page.getByLabel("Namespace", { exact: true }).fill("playground");
+  await page.locator("[name=prompt]").fill(LONG.replace("{}", "region 6"));
   await page.getByRole("button", { name: "Analyze" }).click();
   await expect(page.getByTestId("neighbors")).toContainText("Blocked: numbers differ");
   await page.waitForTimeout(400);

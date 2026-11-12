@@ -21,8 +21,8 @@ test("cached prompts and answers render as text, never as HTML (XSS)", async ({ 
   await page.getByTestId("entry-row").click();
   await expect(page.getByTestId("entry-detail")).toContainText("<script>window.__xss=1</script>");
   await page.goto("/playground");
-  await page.getByLabel("Namespace").fill(ns);
-  await page.getByLabel("Prompt").fill(evil);
+  await page.getByLabel("Namespace", { exact: true }).fill(ns);
+  await page.locator("[name=prompt]").fill(evil);
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("answer")).toContainText("<img src=x onerror");
   expect(await page.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined();
@@ -38,8 +38,8 @@ test("very long prompts do not break the layout", async ({ page, request }) => {
   let overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
   await page.goto("/playground");
-  await page.getByLabel("Namespace").fill(ns);
-  await page.getByLabel("Prompt").fill(long);
+  await page.getByLabel("Namespace", { exact: true }).fill(ns);
+  await page.locator("[name=prompt]").fill(long);
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("log-row")).toBeVisible();
   overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -64,7 +64,7 @@ test("a read-only key: settings explains, the playground shows the missing scope
   await openAs(page, created.key, "/settings");
   await expect(page.getByText(/cannot manage API keys/)).toBeVisible();
   await page.goto("/playground");
-  await page.getByLabel("Namespace").fill(`ro-${RUN}`);
+  await page.getByLabel("Namespace", { exact: true }).fill(`ro-${RUN}`);
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("result").getByRole("alert")).toContainText(/missing scope/);
   await request.delete(`${API}/v1/api-keys/${created.prefix}`, { headers: H });
@@ -76,11 +76,11 @@ test("a namespace-bound key sees only its own tenant in the console", async ({ p
   await ask(request, "their confidential question", theirs);
   const created = await (await request.post(`${API}/v1/api-keys`, { headers: H, data: { name: `bound-${RUN}`, scopes: ["proxy:use", "cache:read", "cache:write", "stats:read", "namespaces:write"], namespace: mine } })).json();
   await openAs(page, created.key, "/playground");
-  await page.getByLabel("Namespace").fill(mine);
-  await page.getByLabel("Prompt").fill("my own question");
+  await page.getByLabel("Namespace", { exact: true }).fill(mine);
+  await page.locator("[name=prompt]").fill("my own question");
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("result").locator("[data-result=MISS]")).toBeVisible();
-  await page.getByLabel("Namespace").fill(theirs);
+  await page.getByLabel("Namespace", { exact: true }).fill(theirs);
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("result").getByRole("alert")).toContainText(/bound to namespace/);
   await page.goto("/namespaces");

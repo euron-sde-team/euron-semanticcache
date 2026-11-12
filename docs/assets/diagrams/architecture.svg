@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="520" viewBox="0 0 1280 520" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="Architecture: apps call the SemanticCache API through any OpenAI SDK; hits are answered from Redis, misses go to the LLM provider and are stored; the console, S3 export and Secrets Manager sit beside it">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8b95a8"/></marker></defs>
+  <rect width="1280" height="520" rx="14" fill="#0b0d12"/>
+  <g fill="#11151d" stroke="#262b36" stroke-width="1.5">
+    <rect x="40" y="70" width="210" height="100" rx="12"/><rect x="40" y="215" width="210" height="100" rx="12"/><rect x="40" y="360" width="210" height="100" rx="12"/>
+    <rect x="340" y="120" width="260" height="230" rx="12" stroke="#2dd4bf"/>
+    <rect x="700" y="70" width="240" height="150" rx="12"/><rect x="700" y="270" width="240" height="150" rx="12"/>
+    <rect x="1030" y="70" width="210" height="90" rx="12"/><rect x="1030" y="195" width="210" height="90" rx="12"/><rect x="1030" y="320" width="210" height="100" rx="12"/>
+  </g>
+  <g fill="#e8ebf2" font-size="16" font-weight="600">
+    <text x="60" y="105">Your AI app</text><text x="60" y="250">Operator console</text><text x="60" y="395">Prometheus</text>
+    <text x="360" y="155" fill="#5eead4">SemanticCache API</text><text x="720" y="105">Redis</text><text x="720" y="305">LLM provider</text>
+    <text x="1050" y="105">S3 snapshots</text><text x="1050" y="230">Secrets Manager</text><text x="1050" y="355">Mock LLM (local)</text>
+  </g>
+  <g fill="#8b95a8" font-size="13">
+    <text x="60" y="128">any OpenAI SDK</text><text x="60" y="148">base_url = the API</text>
+    <text x="60" y="273">Next.js 15 · live savings</text><text x="60" y="293">playground · similarity lab</text><text x="60" y="418">GET /metrics</text>
+    <text x="360" y="182">POST /v1/chat/completions</text><text x="360" y="208">1. scope: model, system, history</text><text x="360" y="230">2. exact match, then semantic</text><text x="360" y="252">3. guards: numbers, IDs, negation</text><text x="360" y="274">4. hit: answer. miss: ask the provider</text><text x="360" y="296">5. store, count savings</text><text x="360" y="326" fill="#6b7486">single-flight + double-check</text>
+    <text x="720" y="130">entries + vectors (float32)</text><text x="720" y="152">exact-match keys · LRU order</text><text x="720" y="174">change log: replicas sync</text><text x="720" y="196">stats · namespaces · API keys</text>
+    <text x="720" y="330">OpenAI-compatible /chat/completions</text><text x="720" y="352">only called on a miss</text><text x="720" y="374" fill="#6b7486">any provider, any gateway</text>
+    <text x="1050" y="128">export / import namespaces</text><text x="1050" y="253">pepper · provider keys</text><text x="1050" y="380">demos, tests, CI</text>
+  </g>
+  <g stroke="#8b95a8" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M250 120 C 300 120 300 190 340 190"/><path d="M250 265 L340 265"/><path d="M250 410 C 300 410 300 320 340 320"/>
+    <path d="M600 190 C 650 190 650 140 700 140"/><path d="M600 290 C 650 290 650 340 700 340" stroke-dasharray="5 5"/>
+    <path d="M600 250 L1030 240" stroke-dasharray="3 6" opacity=".6"/><path d="M600 160 C 800 20 960 20 1030 105" opacity=".6"/>
+  </g>
+  <text x="640" y="495" fill="#6b7486" font-size="13" text-anchor="middle">Hits never reach the provider (dashed). The AWS column is emulated by Floci locally and provisioned by the same Terraform as production.</text>
+</svg>

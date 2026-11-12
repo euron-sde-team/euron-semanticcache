@@ -12,7 +12,7 @@ export const RUN = Math.random().toString(36).slice(2, 8);
 export async function openConsole(page: Page, path = "/") {
   await page.goto(path);
   const connect = page.getByRole("button", { name: "Connect", exact: true });
-  const nav = page.getByRole("navigation", { name: "Main", exact: true });
+  const nav = page.getByRole("navigation", { name: /^Main/ });
   await expect(connect.or(nav)).toBeVisible();
   if (await connect.isVisible()) {
     await connect.click();
@@ -25,7 +25,7 @@ export async function openAs(page: Page, key: string, path = "/") {
   await page.goto("/");
   await page.evaluate((k) => localStorage.setItem("semanticcache.connection", JSON.stringify({ apiUrl: "http://localhost:8180", apiKey: k })), key);
   await page.goto(path);
-  await expect(page.getByRole("navigation", { name: "Main", exact: true })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: /^Main/ })).toBeVisible();
 }
 
 /** Collects uncaught page errors and console errors so a test can assert there were none. */

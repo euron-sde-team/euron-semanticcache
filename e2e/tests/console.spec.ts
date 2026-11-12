@@ -5,7 +5,7 @@ const NS = `pw-${RUN}`;
 const LONG = "Please write a detailed summary of the quarterly sales report for {} including every key metric";
 
 async function send(page: import("@playwright/test").Page, text: string) {
-  await page.getByLabel("Prompt").fill(text);
+  await page.locator("[name=prompt]").fill(text);
   await page.getByRole("button", { name: "Send", exact: true }).click();
 }
 
@@ -36,7 +36,7 @@ test("overview shows savings, hit rate, the breakdown and namespaces", async ({ 
 
 test("playground: miss, exact hit, then a semantic hit on a paraphrase", async ({ page }) => {
   await openConsole(page, "/playground");
-  await page.getByLabel("Namespace").fill(NS);
+  await page.getByLabel("Namespace", { exact: true }).fill(NS);
   await page.getByTestId("preset-Reset password").click();
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("result").locator("[data-result=MISS]")).toBeVisible();
@@ -52,7 +52,7 @@ test("playground: miss, exact hit, then a semantic hit on a paraphrase", async (
 
 test("playground: a look-alike with a different number is NOT served from cache", async ({ page }) => {
   await openConsole(page, "/playground");
-  await page.getByLabel("Namespace").fill(`${NS}-guard`);
+  await page.getByLabel("Namespace", { exact: true }).fill(`${NS}-guard`);
   await send(page, LONG.replace("{}", "region 4"));
   await expect(page.getByTestId("result").locator("[data-result=MISS]")).toBeVisible();
   await send(page, LONG.replace("{}", "region 5"));
@@ -62,7 +62,7 @@ test("playground: a look-alike with a different number is NOT served from cache"
 
 test("playground: cache modes", async ({ page }) => {
   await openConsole(page, "/playground");
-  await page.getByLabel("Namespace").fill(`${NS}-modes`);
+  await page.getByLabel("Namespace", { exact: true }).fill(`${NS}-modes`);
   await page.getByTestId("preset-Capital of France").click();
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("result").locator("[data-result=MISS]")).toBeVisible();
@@ -70,7 +70,7 @@ test("playground: cache modes", async ({ page }) => {
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("result").locator("[data-result=BYPASS]")).toBeVisible();
   await page.getByLabel("Cache mode").selectOption("only-if-cached");
-  await page.getByLabel("Prompt").fill("something that was never asked before 98765");
+  await page.locator("[name=prompt]").fill("something that was never asked before 98765");
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(page.getByTestId("result").locator("[data-result=ERROR]")).toBeVisible();
   await expect(page.getByTestId("result").getByRole("alert")).toContainText(/not in cache/);
@@ -78,7 +78,7 @@ test("playground: cache modes", async ({ page }) => {
 
 test("playground: the demo sequence shows a mix of hits and misses", async ({ page }) => {
   await openConsole(page, "/playground");
-  await page.getByLabel("Namespace").fill(`${NS}-demo`);
+  await page.getByLabel("Namespace", { exact: true }).fill(`${NS}-demo`);
   await page.getByTestId("run-demo").click();
   await expect(page.getByTestId("log-row")).toHaveCount(7, { timeout: 45_000 });
   const hits = await page.locator("[data-testid=log-row][data-result=HIT]").count();
@@ -93,12 +93,12 @@ test("similarity lab explains why a near match would or would not be served", as
   await ask(request, LONG.replace("{}", "region 4"), ns);
   await ask(request, "How do I reset my password?", ns);
   await openConsole(page, "/lab");
-  await page.getByLabel("Namespace").fill(ns);
-  await page.getByLabel("Prompt").fill("how can I reset my password");
+  await page.getByLabel("Namespace", { exact: true }).fill(ns);
+  await page.locator("[name=prompt]").fill("how can I reset my password");
   await page.getByRole("button", { name: "Analyze" }).click();
   await expect(page.getByTestId("neighbors")).toContainText("threshold");
   await expect(page.locator("[data-testid=neighbor][data-hit=true]").first()).toContainText("Would hit");
-  await page.getByLabel("Prompt").fill(LONG.replace("{}", "region 5"));
+  await page.locator("[name=prompt]").fill(LONG.replace("{}", "region 5"));
   await page.getByRole("button", { name: "Analyze" }).click();
   await expect(page.getByTestId("neighbors")).toContainText("Blocked: numbers differ");
 });
@@ -134,7 +134,7 @@ test("namespaces: create, tune the threshold, save and delete", async ({ page })
   const name = `ns-${RUN}`;
   await openConsole(page, "/namespaces");
   await page.getByRole("button", { name: "New namespace" }).first().click();
-  await page.getByLabel("Name").fill(name);
+  await page.locator("[name=namespaceName]").fill(name);
   await page.getByRole("button", { name: "Create", exact: true }).click();
   const card = page.locator(`[data-testid=namespace-card][data-namespace=${name}]`);
   await expect(card).toBeVisible();
@@ -173,7 +173,7 @@ test("settings: a namespace-bound key is shown once, then revoked", async ({ pag
   await openConsole(page, "/settings");
   const keyName = `ui-key-${RUN}`;
   await page.getByRole("button", { name: "Create API key" }).click();
-  await page.getByLabel("Name").fill(keyName);
+  await page.getByLabel("Name", { exact: true }).fill(keyName);
   await page.getByLabel(/Bind to a namespace/).fill("tenant-ui");
   await page.getByRole("button", { name: "Create key" }).click();
   await expect(page.getByTestId("new-key")).toContainText(/^sc_/);
