@@ -116,7 +116,9 @@ def hit_body(entry: CacheEntry, lk: Lookup) -> tuple[dict[str, Any], dict[str, s
 
 
 @router.post(
-    "/v1/chat/completions", summary="OpenAI-compatible chat completion, served from cache when possible"
+    "/v1/chat/completions",
+    response_model=None,
+    summary="OpenAI-compatible chat completion, served from cache when possible",
 )
 async def chat_completions(
     request: Request,
