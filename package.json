@@ -1,0 +1,17 @@
+{
+  "name": "euron-semanticcache",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An intelligent AI response cache that saves money, reduces token consumption and makes AI applications faster.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.34.5",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "console:dev": "pnpm --filter @semanticcache/console dev",
+    "console:build": "pnpm --filter @semanticcache/console build",
+    "console:lint": "pnpm --filter @semanticcache/console lint",
+    "console:typecheck": "pnpm --filter @semanticcache/console typecheck",
+    "console:test": "pnpm --filter @semanticcache/console test",
+    "e2e": "pnpm --filter @semanticcache/e2e test"
+  }
+}
