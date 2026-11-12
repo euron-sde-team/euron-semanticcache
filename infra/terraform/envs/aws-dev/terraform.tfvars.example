@@ -1,0 +1,7 @@
+region            = "us-east-1"
+image_tag         = "latest"
+alert_email       = "you@example.com"
+upstream_base_url = "https://api.openai.com/v1"
+# upstream_api_key = "sk-..."          # or pass with TF_VAR_upstream_api_key
+# embedder         = "openai"           # real semantic matching
+# certificate_arn  = "arn:aws:acm:us-east-1:123456789012:certificate/..."

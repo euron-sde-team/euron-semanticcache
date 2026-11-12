@@ -1,0 +1,8 @@
+region            = "us-east-1"
+image_tag         = "v0.1.0"
+certificate_arn   = "arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"
+ingress_cidr      = "203.0.113.0/24"
+alert_email       = "oncall@example.com"
+upstream_base_url = "https://api.openai.com/v1"
+embedder          = "openai"
+# Pass secrets through the environment: TF_VAR_upstream_api_key, TF_VAR_embedding_api_key
