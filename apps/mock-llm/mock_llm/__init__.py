@@ -1,0 +1,1 @@
+"""Mock OpenAI-compatible provider."""
