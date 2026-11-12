@@ -63,6 +63,6 @@ async def test_openai_compat_embedder_posts_and_normalises() -> None:
 
 
 def test_build_embedder() -> None:
-    assert build_embedder("hashing", dim=64).dim == 64  # type: ignore[attr-defined]
+    assert build_embedder("hashing", dim=64).dim == 64
     with pytest.raises(ValueError, match="unknown embedder"):
         build_embedder("nope")
