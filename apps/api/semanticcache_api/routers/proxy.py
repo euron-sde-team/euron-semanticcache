@@ -110,7 +110,7 @@ def hit_body(entry: CacheEntry, lk: Lookup) -> tuple[dict[str, Any], dict[str, s
     body["semantic_cache"] = info
     headers = {
         "X-SemanticCache": "HIT", "X-SemanticCache-Type": info["type"] or "", "X-SemanticCache-Similarity": str(info["similarity"]),
-        "X-SemanticCache-Id": entry.id, "X-SemanticCache-Saved-Usd": str(info["saved_usd"]),
+        "X-SemanticCache-Id": entry.id, "X-SemanticCache-Saved-Usd": f"{entry.cost_micro_usd / 1e6:.6f}",
     }  # fmt: skip
     return body, headers
 

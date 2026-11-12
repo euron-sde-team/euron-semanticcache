@@ -62,7 +62,11 @@ def apply_aws_secrets(settings: ApiSettings, client: Any = None) -> ApiSettings:
         return settings
     client = client or aws_client("secretsmanager", settings)
     data = json.loads(client.get_secret_value(SecretId=settings.secrets_arn)["SecretString"])
-    update = {k: data[k] for k in ("api_key_pepper", "bootstrap_api_key", "upstream_api_key", "embedding_api_key") if data.get(k)}
+    update = {
+        k: data[k]
+        for k in ("api_key_pepper", "bootstrap_api_key", "upstream_api_key", "embedding_api_key")
+        if data.get(k)
+    }
     return settings.model_copy(update=update)
 
 

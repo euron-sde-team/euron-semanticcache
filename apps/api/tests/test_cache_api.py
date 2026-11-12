@@ -175,3 +175,22 @@ async def test_a_bound_key_can_only_import_its_own_exports(stack: Stack, s3: Fak
         "/v1/cache/import", json={"key": "exports/tenant-b/x.jsonl"}, headers={"X-API-Key": key}
     )
     assert r.status_code == 403
+
+
+async def test_cache_endpoints_accept_the_namespace_as_a_header_like_the_proxy(stack: Stack) -> None:
+    """Regression: only ?namespace= was honoured, so X-SC-Namespace on /v1/cache/* silently hit 'default'."""
+    h = {"X-SC-Namespace": "via-header"}
+    await stack.ask(PW, headers=h)
+    assert (await stack.api.get("/v1/cache/entries", headers=h)).json()["total"] == 1
+    assert (await stack.api.get("/v1/cache/entries")).json()["total"] == 0, (
+        "the default namespace must stay empty"
+    )
+    assert (await stack.api.get("/v1/cache/entries", params={"namespace": "via-query"})).json()["total"] == 0
+    both = await stack.api.get("/v1/cache/entries", headers=h, params={"namespace": "via-header"})
+    assert both.json()["total"] == 1
+    warm = {"model": "gpt-4o-mini", "messages": MSGS, "response": RESPONSE}
+    assert (await stack.api.post("/v1/cache/entries", json=warm, headers=h)).status_code == 201
+    assert (await stack.api.post("/v1/cache/invalidate", json={"tag": "none"}, headers=h)).json() == {
+        "deleted": 0
+    }
+    assert (await stack.api.delete("/v1/cache/entries", headers=h)).json()["deleted"] == 1

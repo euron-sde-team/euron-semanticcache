@@ -10,7 +10,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from semanticcache_core import CacheEntry, ChatRequest, Lookup
 
-from ..auth import Principal, require, resolve_namespace
+from ..auth import Principal, requested_namespace, require, resolve_namespace
 from ..deps import Cache, Settings
 from ..schemas import (
     Deleted,
@@ -29,7 +29,7 @@ from ..settings import aws_client
 from .proxy import usage_of
 
 router = APIRouter(prefix="/v1/cache", tags=["cache"])
-Namespace = Annotated[str | None, Query(description="Defaults to the key's namespace, then 'default'")]
+Namespace = Annotated[str | None, Depends(requested_namespace)]
 
 
 def to_request(body: LookupBody) -> ChatRequest:
@@ -39,7 +39,7 @@ def to_request(body: LookupBody) -> ChatRequest:
 @router.post("/lookup", summary="Would this request hit? (never calls the provider, never counted)")
 async def lookup(
     body: LookupBody, cache: Cache, settings: Settings,
-    principal: Annotated[Principal, Depends(require("cache:read"))], namespace: Namespace = None,
+    principal: Annotated[Principal, Depends(require("cache:read"))], namespace: Namespace,
 ) -> Lookup:  # fmt: skip
     ns = resolve_namespace(principal, namespace, settings.default_namespace)
     return await cache.lookup(ns, to_request(body), record=False)
@@ -48,7 +48,7 @@ async def lookup(
 @router.post("/explain", summary="Nearest cached prompts, with the verdict and reason for each")
 async def explain(
     body: ExplainBody, cache: Cache, settings: Settings,
-    principal: Annotated[Principal, Depends(require("cache:read"))], namespace: Namespace = None,
+    principal: Annotated[Principal, Depends(require("cache:read"))], namespace: Namespace,
 ) -> ExplainResponse:  # fmt: skip
     """Shows why something did or did not hit: similarity, whether the candidate shares the safety scope
     (model, system prompt, history), and which guard (numbers, identifiers, negation) rejected it."""
@@ -61,7 +61,7 @@ async def explain(
 @router.post("/entries", status_code=status.HTTP_201_CREATED, summary="Warm the cache with a known answer")
 async def put_entry(
     body: PutBody, cache: Cache, settings: Settings,
-    principal: Annotated[Principal, Depends(require("cache:write"))], namespace: Namespace = None,
+    principal: Annotated[Principal, Depends(require("cache:write"))], namespace: Namespace,
 ) -> CacheEntry:  # fmt: skip
     ns = resolve_namespace(principal, namespace, settings.default_namespace)
     req = to_request(body)
@@ -74,7 +74,7 @@ async def put_entry(
 @router.get("/entries", summary="Browse entries, most recently used first")
 async def list_entries(
     cache: Cache, settings: Settings, principal: Annotated[Principal, Depends(require("cache:read"))],
-    namespace: Namespace = None,
+    namespace: Namespace,
     q: Annotated[str | None, Query(description="Substring of the prompt")] = None,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
@@ -87,7 +87,7 @@ async def list_entries(
 @router.get("/entries/{entry_id}", summary="One entry")
 async def get_entry(
     entry_id: str, cache: Cache, settings: Settings,
-    principal: Annotated[Principal, Depends(require("cache:read"))], namespace: Namespace = None,
+    principal: Annotated[Principal, Depends(require("cache:read"))], namespace: Namespace,
 ) -> CacheEntry:  # fmt: skip
     ns = resolve_namespace(principal, namespace, settings.default_namespace)
     entry = await cache.store.get(ns, entry_id)
@@ -99,7 +99,7 @@ async def get_entry(
 @router.delete("/entries/{entry_id}", summary="Invalidate one entry")
 async def delete_entry(
     entry_id: str, cache: Cache, settings: Settings,
-    principal: Annotated[Principal, Depends(require("cache:write"))], namespace: Namespace = None,
+    principal: Annotated[Principal, Depends(require("cache:write"))], namespace: Namespace,
 ) -> Deleted:  # fmt: skip
     ns = resolve_namespace(principal, namespace, settings.default_namespace)
     if not await cache.store.delete(ns, entry_id):
@@ -110,7 +110,7 @@ async def delete_entry(
 @router.delete("/entries", summary="Flush every entry in a namespace")
 async def flush(
     cache: Cache, settings: Settings, principal: Annotated[Principal, Depends(require("cache:write"))],
-    namespace: Namespace = None,
+    namespace: Namespace,
 ) -> Deleted:  # fmt: skip
     ns = resolve_namespace(principal, namespace, settings.default_namespace)
     return Deleted(deleted=await cache.store.flush(ns))
@@ -119,7 +119,7 @@ async def flush(
 @router.post("/invalidate", summary="Invalidate every entry carrying a tag")
 async def invalidate(
     body: InvalidateBody, cache: Cache, settings: Settings,
-    principal: Annotated[Principal, Depends(require("cache:write"))], namespace: Namespace = None,
+    principal: Annotated[Principal, Depends(require("cache:write"))], namespace: Namespace,
 ) -> Deleted:  # fmt: skip
     ns = resolve_namespace(principal, namespace, settings.default_namespace)
     return Deleted(deleted=await cache.invalidate_tag(ns, body.tag))
@@ -154,7 +154,7 @@ async def export(
 @router.get("/exports", summary="List snapshots of a namespace")
 async def list_exports(
     cache: Cache, settings: Settings, principal: Annotated[Principal, Depends(require("cache:read"))],
-    namespace: Namespace = None,
+    namespace: Namespace,
 ) -> list[dict[str, Any]]:  # fmt: skip
     ns = resolve_namespace(principal, namespace, settings.default_namespace)
     s3 = aws_client("s3", settings)

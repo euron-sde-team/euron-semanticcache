@@ -230,3 +230,11 @@ async def test_streaming_a_miss_is_forwarded_then_cached(stack: Stack) -> None:
     assert text
     assert (await stack.ask("stream this new question please")).headers["x-semanticcache"] == "HIT"
     assert await stack.provider_calls() == 1
+
+
+async def test_saved_usd_header_is_plain_decimal_not_scientific_notation(stack: Stack) -> None:
+    """Regression: tiny savings were rendered as '2.9e-05', which dashboards and curl users misread."""
+    await stack.ask(PW)
+    hit = await stack.ask(PW)
+    header = hit.headers["x-semanticcache-saved-usd"]
+    assert "e" not in header.lower() and float(header) > 0 and len(header.split(".")[1]) == 6

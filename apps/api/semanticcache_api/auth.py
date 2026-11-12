@@ -11,7 +11,7 @@ import secrets
 import time
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from redis.asyncio import Redis
 from semanticcache_core.models import NAMESPACE_PATTERN
@@ -174,3 +174,15 @@ def resolve_namespace(principal: Principal, requested: str | None, default: str)
     if not _NS_RE.match(ns):
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"invalid namespace {ns!r}")
     return ns
+
+
+async def requested_namespace(
+    namespace: Annotated[
+        str | None, Query(description="Defaults to the key's namespace, then 'default'")
+    ] = None,
+    x_sc_namespace: Annotated[
+        str | None, Header(description="Same as the `namespace` query parameter")
+    ] = None,
+) -> str | None:
+    """Cache endpoints take the namespace from ``?namespace=`` or from ``X-SC-Namespace``, like the proxy does."""
+    return namespace or x_sc_namespace
