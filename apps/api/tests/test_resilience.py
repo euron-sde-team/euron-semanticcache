@@ -13,7 +13,7 @@ PW = "How do I reset my password?"
 
 async def kill_all_other_connections(admin: aioredis.Redis) -> None:
     """What a Redis restart or failover does to a client's connection pool."""
-    await admin.execute_command("CLIENT", "KILL", "TYPE", "normal", "SKIPME", "yes")
+    await admin.execute_command("CLIENT", "KILL", "TYPE", "normal", "SKIPME", "yes")  # type: ignore[no-untyped-call]
 
 
 async def test_requests_survive_stale_pooled_connections(

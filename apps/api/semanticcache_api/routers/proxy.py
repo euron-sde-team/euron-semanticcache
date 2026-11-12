@@ -187,7 +187,14 @@ async def chat_completions(
 
     tags = [t.strip() for t in (x_sc_tags or "").split(",") if t.strip()]
 
-    async def fetch() -> tuple[dict[str, Any], CacheEntry | None]:
+    async def fetch() -> tuple[dict[str, Any], CacheEntry | None, Lookup | None]:
+        # Double-checked: another request may have stored this very answer between our lookup and our becoming the
+        # flight leader (its flight already ended, so nothing coalesced us). Without this re-check the provider is
+        # paid twice for one question.
+        if mode != "refresh":
+            late = await cache.lookup(ns, req, prep, record=False)
+            if late.hit and late.entry:
+                return late.entry.response, late.entry, late
         result = await forward(upstream, fwd, x_upstream_api_key, with_latency=True)
         response, latency = result["body"], result["latency_ms"]
         entry = None
@@ -195,9 +202,14 @@ async def chat_completions(
             entry = await cache.put(
                 ns, req, response, usage_of(response, req), latency, prep, ttl_s=x_sc_ttl, tags=tags
             )
-        return response, entry
+        return response, entry, None
 
-    (response, entry), shared = await cache.flights.run(f"{ns}:{prep.exact_hash}", fetch)
+    (response, entry, late_hit), shared = await cache.flights.run(f"{ns}:{prep.exact_hash}", fetch)
+    if late_hit and late_hit.entry:
+        await cache.record_lookup(ns, late_hit)
+        out, headers = hit_body(late_hit.entry, late_hit)
+        done(f"hit_{late_hit.match.value}" if late_hit.match else "hit")
+        return respond(out, stream, headers)
     response = copy.deepcopy(response)
     if shared and entry:
         await cache.record_coalesced(ns, entry)

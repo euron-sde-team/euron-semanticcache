@@ -238,3 +238,34 @@ async def test_saved_usd_header_is_plain_decimal_not_scientific_notation(stack: 
     hit = await stack.ask(PW)
     header = hit.headers["x-semanticcache-saved-usd"]
     assert "e" not in header.lower() and float(header) > 0 and len(header.split(".")[1]) == 6
+
+
+async def test_a_request_that_lost_the_race_reuses_the_answer_instead_of_calling_the_provider(
+    stack: Stack,
+) -> None:
+    """Regression (found by the chaos suite as 21 provider calls for 20 questions): B looked up and missed, A then
+    finished and stored its answer, and B started a new flight and paid the provider again. The flight leader must
+    re-check the cache before calling out."""
+    await stack.ask(PW)  # A's answer is now stored
+    cache = stack.app.state.cache
+    real_lookup = cache.lookup
+    seen = {"n": 0}
+
+    async def stale_first_lookup(*a: Any, **kw: Any) -> Any:
+        seen["n"] += 1
+        if seen["n"] == 1:  # B's early lookup, from before A stored its answer
+            from semanticcache_core import Lookup
+
+            return Lookup(hit=False)
+        return await real_lookup(*a, **kw)
+
+    cache.lookup = stale_first_lookup
+    try:
+        r = await stack.ask(PW)
+    finally:
+        cache.lookup = real_lookup
+    assert r.headers["x-semanticcache"] == "HIT", r.headers["x-semanticcache"]
+    assert r.json()["semantic_cache"]["hit"] is True
+    assert await stack.provider_calls() == 1, "the second request must not have called the provider"
+    s = (await stack.api.get("/v1/stats/overview")).json()["totals"]
+    assert (s["hits"], s["misses"]) == (1, 1), "it is counted as a hit, not a miss"
