@@ -212,6 +212,33 @@ class SemanticCache:
         await self.store.incr(ns, {"stores": 1, "cost_spent_micro": cost, "evictions": evicted})
         return entry
 
+    async def import_entry(self, ns: str, entry: CacheEntry) -> CacheEntry | None:
+        """Restores an exported entry (embedding it again, so a changed embedder still works).
+        Returns None when it has already expired."""
+        now = now_ms()
+        if entry.expires_at is not None and entry.expires_at <= now:
+            return None
+        cfg = await self.config(ns)
+        norm = normalize(entry.prompt)
+        exact = hashlib.sha256(f"{entry.scope}\x00{norm}".encode()).hexdigest()[:32]
+        vec = (await self.embedder.embed([entry.prompt]))[0]
+        ttl = max(1, ((entry.expires_at or now + cfg.ttl_seconds * 1000) - now) // 1000)
+        restored = entry.model_copy(update={"namespace": ns, "id": new_id(), "hits": 0, "last_hit_at": None})
+        await self.store.register_namespace(ns)
+        await self.store.put(restored, vec, norm, exact, cfg.max_entries, ttl)
+        return restored
+
+    async def record_coalesced(self, ns: str, entry: CacheEntry) -> None:
+        """A concurrent identical miss that shared another request's upstream call also saved money."""
+        await self.store.incr(
+            ns,
+            {
+                "coalesced": 1, "tokens_saved_in": entry.usage.prompt_tokens,
+                "tokens_saved_out": entry.usage.completion_tokens, "cost_saved_micro": entry.cost_micro_usd,
+                "latency_saved_ms": entry.latency_ms,
+            },
+        )  # fmt: skip
+
     # ── explain ──────────────────────────────────────────────────────────────
     async def explain(self, ns: str, req: ChatRequest, k: int = 8) -> list[Neighbor]:
         """Nearest cached prompts, with whether each shares the scope and why it would or would not be a hit."""

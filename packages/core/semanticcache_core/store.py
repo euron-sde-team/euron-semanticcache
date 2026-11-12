@@ -19,7 +19,7 @@ from .scripts import Scripts
 STAT_FIELDS = (
     "hits_exact", "hits_semantic", "misses", "bypass", "stores", "errors",
     "tokens_saved_in", "tokens_saved_out", "cost_saved_micro", "latency_saved_ms",
-    "cost_spent_micro", "evictions", "rejected_guard",
+    "cost_spent_micro", "evictions", "rejected_guard", "coalesced",
 )  # fmt: skip
 
 

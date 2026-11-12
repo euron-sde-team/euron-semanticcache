@@ -308,3 +308,30 @@ async def test_single_flight_propagates_errors_to_every_waiter_and_recovers() ->
         return 1
 
     assert (await sf.run("k", ok))[0] == 1
+
+
+# ── export / import ──────────────────────────────────────────────────────────────────────────────────────────
+async def test_import_entry_restores_into_another_namespace_and_still_matches(cache: SemanticCache) -> None:
+    original = await store(cache, "How do I reset my password?", ns="src")
+    restored = await cache.import_entry("dst", original)
+    assert restored and restored.id != original.id and restored.namespace == "dst" and restored.hits == 0
+    assert (await cache.lookup("dst", chat("How do I reset my password?"))).match == MatchType.EXACT
+    assert (await cache.lookup("dst", chat("how can I reset my password"))).hit is True
+    assert (await cache.lookup("dst", chat("how can I reset my password", system="other"))).hit is False
+
+
+async def test_import_entry_skips_expired_and_keeps_remaining_ttl(cache: SemanticCache) -> None:
+    e = await cache.put("src", chat("ttl question"), RESP, Usage(), 5, ttl_s=100)
+    expired = e.model_copy(update={"expires_at": 1})
+    assert await cache.import_entry("dst", expired) is None
+    restored = await cache.import_entry("dst", e)
+    assert restored
+    ttl = await cache.store.r.ttl(cache.store.k("dst", f"e:{restored.id}"))
+    assert 90 <= ttl <= 100
+
+
+async def test_coalesced_requests_count_as_savings(cache: SemanticCache) -> None:
+    e = await store(cache, "coalesce me")
+    await cache.record_coalesced("t", e)
+    s = await cache.store.stats("t")
+    assert s["coalesced"] == 1 and s["cost_saved_micro"] == e.cost_micro_usd
