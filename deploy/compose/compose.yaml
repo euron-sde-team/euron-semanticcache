@@ -1,0 +1,62 @@
+# Base stack: Redis, a mock LLM provider, two API replicas and the console.
+# Overlay compose.floci.yaml adds the AWS emulator. Point SC_UPSTREAM_BASE_URL at a real provider to use one.
+name: euron-semanticcache
+
+x-sc-env: &sc-env
+  SC_REDIS_URL: redis://redis:6379/0
+  SC_API_KEY_PEPPER: ${SC_API_KEY_PEPPER:?run `make env` first}
+  SC_BOOTSTRAP_API_KEY: ${SC_BOOTSTRAP_API_KEY:?run `make env` first}
+  SC_UPSTREAM_BASE_URL: ${SC_UPSTREAM_BASE_URL:-http://mock-llm:8190/v1}
+  SC_UPSTREAM_API_KEY: ${SC_UPSTREAM_API_KEY:-}
+  SC_EMBEDDER: ${SC_EMBEDDER:-hashing}
+  SC_CORS_ORIGINS: http://localhost:${SC_CONSOLE_PORT:-3100},http://127.0.0.1:${SC_CONSOLE_PORT:-3100}
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    # AOF so entries survive a restart. noeviction: the cache bounds itself; Redis must never drop API keys,
+    # namespace settings or statistics on its own.
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports: ["127.0.0.1:${SC_REDIS_PORT:-6479}:6379"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mock-llm:
+    build: { context: ../.., dockerfile: infra/docker/mock-llm.Dockerfile }
+    environment:
+      MOCK_LATENCY_MS: ${MOCK_LATENCY_MS:-700}
+    ports: ["127.0.0.1:${SC_MOCK_PORT:-8190}:8190"]
+
+  api:
+    build: { context: ../.., dockerfile: infra/docker/api.Dockerfile }
+    environment: *sc-env
+    ports: ["${SC_API_PORT:-8180}:8180"]
+    depends_on:
+      redis: { condition: service_healthy }
+      mock-llm: { condition: service_started }
+
+  # A second replica on its own port. Cache writes made through one are visible through the other (change-log sync).
+  api-replica:
+    build: { context: ../.., dockerfile: infra/docker/api.Dockerfile }
+    environment: *sc-env
+    ports: ["127.0.0.1:${SC_API_REPLICA_PORT:-8181}:8180"]
+    depends_on:
+      redis: { condition: service_healthy }
+      mock-llm: { condition: service_started }
+
+  console:
+    build:
+      context: ../..
+      dockerfile: infra/docker/console.Dockerfile
+      args:
+        NEXT_PUBLIC_SC_API_URL: http://localhost:${SC_API_PORT:-8180}
+        NEXT_PUBLIC_SC_DEFAULT_API_KEY: ${SC_BOOTSTRAP_API_KEY:-}
+    ports: ["${SC_CONSOLE_PORT:-3100}:3100"]
+    depends_on: [api]
+
+volumes:
+  redisdata:
