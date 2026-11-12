@@ -7,6 +7,11 @@ from typing import Annotated, Any
 
 from pydantic import Field, field_validator
 from pydantic_settings import NoDecode
+from redis.asyncio import Redis
+from redis.asyncio.retry import Retry
+from redis.backoff import ExponentialBackoff
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import TimeoutError as RedisTimeoutError
 from semanticcache_core import CoreSettings
 
 
@@ -46,6 +51,21 @@ class ApiSettings(CoreSettings):
 def resolve_region(configured: str | None) -> str | None:
     """boto3 only reads AWS_DEFAULT_REGION; ECS and most tooling set AWS_REGION, so honour both."""
     return configured or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
+
+
+def build_redis(url: str) -> Redis:
+    """The API's Redis client. Bytes mode (embeddings are raw float32), with transparent recovery from stale pooled
+    connections: after a Redis restart or failover every pooled connection is dead, and without retries each one would
+    surface as a 500 to a real request. Retries are bounded and cover connection errors only."""
+    return Redis.from_url(
+        url,
+        decode_responses=False,
+        socket_connect_timeout=5,
+        socket_keepalive=True,
+        health_check_interval=15,
+        retry=Retry(ExponentialBackoff(cap=1.0, base=0.05), retries=4),
+        retry_on_error=[RedisConnectionError, RedisTimeoutError],
+    )
 
 
 def aws_client(service: str, settings: ApiSettings) -> Any:

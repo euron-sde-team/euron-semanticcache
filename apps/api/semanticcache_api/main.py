@@ -21,7 +21,7 @@ from .auth import ApiKeyStore
 from .logging_config import configure_logging
 from .metrics import ApiMetrics
 from .routers import api_keys, cache, namespaces, proxy, stats
-from .settings import ApiSettings, apply_aws_secrets, get_settings
+from .settings import ApiSettings, apply_aws_secrets, build_redis, get_settings
 from .upstream import UpstreamClient
 
 log = logging.getLogger("semanticcache.api")
@@ -60,7 +60,7 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        client = redis or Redis.from_url(settings.redis_url, decode_responses=False)
+        client = redis or build_redis(settings.redis_url)
         embedder = build_embedder(
             settings.embedder, dim=settings.embedding_dim, base_url=settings.embedding_base_url,
             model=settings.embedding_model, api_key=settings.embedding_api_key,
