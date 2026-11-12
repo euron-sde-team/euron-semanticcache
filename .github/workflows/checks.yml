@@ -1,0 +1,73 @@
+# Fast checks: lint, types and tests for the Python packages, the console and the Terraform.
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: python · lint · types · tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6391:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      SC_TEST_REDIS_URL: redis://localhost:6391/15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e packages/core -e apps/api -e apps/mock-llm pytest pytest-asyncio httpx ruff mypy boto3
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy packages/core
+      - run: mypy apps/api
+      - run: mypy apps/mock-llm
+      - run: pytest packages/core
+      - run: pytest apps/api
+      - run: pytest apps/mock-llm
+
+  console:
+    name: console · lint · types · tests · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm console:lint
+      - run: pnpm console:typecheck
+      - run: pnpm console:test
+      - run: pnpm console:build
+
+  terraform:
+    name: terraform · fmt · validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        env: [local-floci, aws-dev, aws-prod]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: 1.16.6 }
+      - run: terraform fmt -check -recursive infra/terraform
+      - working-directory: infra/terraform/envs/${{ matrix.env }}
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
