@@ -7,21 +7,25 @@ SemanticCache is OpenAI-compatible. Create a key (Console, Settings, or `make ke
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="http://localhost:8180/v1", api_key="sc_...")   # the only change
+client = OpenAI(base_url="http://localhost:8180/v1", api_key="sc_...")  # the only change
 
 resp = client.chat.completions.create(
     model="gpt-4o-mini",
-    messages=[{"role": "system", "content": "You are a support agent."},
-              {"role": "user", "content": "How do I reset my password?"}],
+    messages=[
+        {"role": "system", "content": "You are a support agent."},
+        {"role": "user", "content": "How do I reset my password?"},
+    ],
 )
 print(resp.choices[0].message.content)
-print(resp.semantic_cache)        # {"hit": True, "type": "semantic", "similarity": 0.93, "saved_usd": 0.0004, ...}
+print(resp.semantic_cache)  # {"hit": True, "type": "semantic", "similarity": 0.93, "saved_usd": 0.0004, ...}
 ```
 
 Per-request control with `extra_headers`:
 
 ```python
-client.chat.completions.create(..., extra_headers={"X-SC-Namespace": "acme", "X-SC-TTL": "3600", "X-SC-Tags": "pricing"})
+client.chat.completions.create(
+    ..., extra_headers={"X-SC-Namespace": "acme", "X-SC-TTL": "3600", "X-SC-Tags": "pricing"}
+)
 ```
 
 ## Node

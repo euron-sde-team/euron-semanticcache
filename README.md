@@ -368,14 +368,14 @@ e2e: all assertions passed
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="http://localhost:8180/v1", api_key="sc_...")      # the only change
+client = OpenAI(base_url="http://localhost:8180/v1", api_key="sc_...")  # the only change
 
 resp = client.chat.completions.create(
     model="gpt-4o-mini",
     messages=[{"role": "user", "content": "How do I reset my password?"}],
-    extra_headers={"X-SC-Namespace": "acme-support"},                       # one namespace per tenant
+    extra_headers={"X-SC-Namespace": "acme-support"},  # one namespace per tenant
 )
-print(resp.semantic_cache)   # {"hit": True, "type": "semantic", "similarity": 1.0, "saved_usd": 0.000029, ...}
+print(resp.semantic_cache)  # {"hit": True, "type": "semantic", "similarity": 1.0, "saved_usd": 0.000029, ...}
 ```
 
 | Header | Effect |

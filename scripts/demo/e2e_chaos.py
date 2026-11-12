@@ -219,7 +219,9 @@ check(
     "the replica keeps serving while the primary is dead",
     api.ask("a question asked before the crash", ns=n, base=api.replica).result == "HIT",
 )
-subprocess.run(["docker", "start", "euron-semanticcache-api-1"], capture_output=True)  # not `compose up`: that re-runs the Terraform one-shot
+subprocess.run(
+    ["docker", "start", "euron-semanticcache-api-1"], capture_output=True
+)  # not `compose up`: that re-runs the Terraform one-shot
 check("the primary comes back", api.wait_ready(timeout=90))
 check(
     "entries and API keys survived a SIGKILL",
