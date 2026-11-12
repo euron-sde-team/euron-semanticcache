@@ -249,7 +249,9 @@ class SemanticCache:
         assert prep.vector is not None
         out: list[Neighbor] = []
         for cand in idx.search(prep.vector, prep.scope, k, include_out_of_scope=True):
-            guard = guard_failure(prep.norm, cand.prompt_norm) if cfg.guards else None
+            # A guard is only meaningful for a candidate the embedding would otherwise have accepted.
+            near = cand.similarity >= cfg.threshold
+            guard = guard_failure(prep.norm, cand.prompt_norm) if cfg.guards and near else None
             hit = cand.in_scope and cand.similarity >= cfg.threshold and guard is None
             out.append(
                 Neighbor(

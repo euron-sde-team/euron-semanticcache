@@ -62,6 +62,7 @@ export function parseJsonObject(text: string): { value: Record<string, unknown> 
 export function formatUsd(n: number | null | undefined): string {
   if (n == null) return "-";
   if (n === 0) return "$0.00";
+  if (Math.abs(n) < 0.0001) return n > 0 ? "<$0.0001" : "-<$0.0001";
   if (Math.abs(n) < 0.01) return `$${n.toFixed(4)}`;
   if (Math.abs(n) < 1000) return `$${n.toFixed(2)}`;
   return `$${(n / 1000).toFixed(1)}k`;

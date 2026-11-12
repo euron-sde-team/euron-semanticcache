@@ -3,7 +3,7 @@ import { formatDuration, formatNumber, formatPct, formatTtl, formatUsd, relative
 
 describe("formatUsd", () => {
   it.each([
-    [null, "-"], [0, "$0.00"], [0.0042, "$0.0042"], [0.000045, "$0.0000"], [0.5, "$0.50"], [12.345, "$12.35"], [1840, "$1.8k"],
+    [null, "-"], [0, "$0.00"], [0.0042, "$0.0042"], [0.000045, "<$0.0001"], [-0.00001, "-<$0.0001"], [0.0001, "$0.0001"], [0.5, "$0.50"], [12.345, "$12.35"], [1840, "$1.8k"],
   ])("formats %s as %s", (input, expected) => expect(formatUsd(input as number | null)).toBe(expected));
 });
 

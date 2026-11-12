@@ -335,3 +335,16 @@ async def test_coalesced_requests_count_as_savings(cache: SemanticCache) -> None
     await cache.record_coalesced("t", e)
     s = await cache.store.stats("t")
     assert s["coalesced"] == 1 and s["cost_saved_micro"] == e.cost_micro_usd
+
+
+async def test_explain_reports_a_guard_only_for_candidates_that_were_near_enough(
+    cache: SemanticCache,
+) -> None:
+    """Regression: unrelated prompts were labelled 'blocked: numbers differ' although they never came close."""
+    await store(cache, LONG.format("region 4"))
+    await store(cache, "What is the capital of France?")
+    ns = await cache.explain("t", chat(LONG.format("region 5")))
+    near = next(n for n in ns if "region 4" in n.prompt)
+    far = next(n for n in ns if "france" in n.prompt)
+    assert near.guard == "numbers differ" and not near.would_hit
+    assert far.similarity < 0.85 and far.guard is None and not far.would_hit
