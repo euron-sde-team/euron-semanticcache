@@ -70,10 +70,12 @@ for ns, pool, n, model in [
 ]:
     for q in traffic(pool, n):
         jobs.append((ns, q, model))
-# Warm each distinct question once first so concurrent duplicates do not all pay for the first answer.
+# Ask each distinct question once first, so the repeats that follow are real cache traffic rather than a stampede.
 seen: set[tuple[str, str]] = set()
-first = [j for j in jobs if (j[0], j[1]) not in seen and not seen.add((j[0], j[1]))]
-rest = [j for j in jobs if j not in first]
+first, rest = [], []
+for j in jobs:
+    (rest if (j[0], j[1]) in seen else first).append(j)
+    seen.add((j[0], j[1]))
 
 print(f"seeding {len(jobs)} requests ({len(first)} distinct) ...")
 with ThreadPoolExecutor(8) as pool_:
